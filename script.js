@@ -1,41 +1,43 @@
 async function loadNewsletters() {
-  const listEl = document.getElementById("newsletter-list");
-  try {
-    // 캐시 무효화를 위해 쿼리스트링 추가
-    const res = await fetch("./newsletterData.json?_=" + Date.now());
-    if (!res.ok) throw new Error("JSON 응답 오류");
-    const data = await res.json();
+  const container = document.getElementById("newsletter-list");
 
-    if (!Array.isArray(data) || data.length === 0) {
-      listEl.textContent = "아직 등록된 뉴스레터가 없습니다.";
-      return;
+  try {
+    const res = await fetch("newsletterData.json?_=" + Date.now());
+    if (!res.ok) throw new Error("데이터 불러오기 실패");
+
+    const newsletters = await res.json();
+
+    if (!Array.isArray(newsletters) || newsletters.length === 0) {
+      return; // index.html 기본 "뉴스레터 준비 중" 박스 유지
     }
 
-    listEl.innerHTML = "";
-    data.forEach(item => {
-      const card = document.createElement("article");
-      card.className = "card";
-      card.innerHTML = `
-        <h3 class="card-title">${escapeHtml(item.title)}</h3>
-        <p class="card-meta">${escapeHtml(item.date)}</p>
-        <a href="${encodeURI(item.url)}" target="_blank" rel="noopener">열어보기</a>
-      `;
-      listEl.appendChild(card);
-    });
-  } catch (e) {
-    console.error(e);
-    listEl.textContent = "목록을 불러오지 못했습니다.";
-  }
-}
+    container.innerHTML = ""; // 기본 박스 지우기
 
-// 간단한 XSS 방지용
-function escapeHtml(s) {
-  return String(s)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+    newsletters.forEach(nl => {
+      const card = document.createElement("div");
+      card.className = "newsletter-card";
+      card.style.cssText = `
+        background: #fff;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #E9ECEF;
+      `;
+
+      card.innerHTML = `
+        <h3 style="margin:0 0 8px 0; font-size:20px; color:#1E3A5F;">${nl.title}</h3>
+        <p style="margin:0 0 12px 0; color:#6C757D; font-size:14px;">${nl.date}</p>
+        <a href="${nl.url}" target="_blank" style="color:#1E3A5F; font-weight:600; text-decoration:none;">
+          자세히 보기 →
+        </a>
+      `;
+
+      container.appendChild(card);
+    });
+  } catch (err) {
+    console.error("뉴스레터 로딩 에러:", err);
+  }
 }
 
 loadNewsletters();
